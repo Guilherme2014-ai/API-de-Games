@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <title>Simulado</title>
+</head>
+<body><br>
+
+    <div style="border: solid rgb(185, 185, 185) 1px;" class="container"><br>
+
+        <div>
+
+            <div class="card-header"><h2>Login</h2></div>
+            <div class="card-body">
+                <input type="email" class="form-control" name="email" id="email" placeholder="Email"><br>
+                <input type="password" class="form-control" name="password" id="password" placeholder="Senha">
+                <br>
+                <button class="btn btn-outline-success" id="cadastrar">Cadastrar</button>
+            </div><hr><br>
+
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h2>Games</h2></div>
+            <div class="card-body" id="games">
+            </div>
+            <hr>
+            
+            <h2 style="margin-left: 16px;">Editar Jogo</h2>
+            <div style="margin: 18px;">
+
+                <input class="form-control" type="text" name="idEdit" id="idEdit" readonly required><br>
+                <input class="form-control" type="text" name="titleEdit" id="titleEdit"><br>
+                <input class="form-control" type="number" name="yearEdit" id="yearEdit"><br>
+                <input class="form-control" type="number" name="priceEdit" id="priceEdit">
+                <br>
+                <button class="btn btn-outline-warning" id="editar-btn" name="editar-btn" onclick="editar()">Editar</button>
+
+            </div>
+        </div>
+
+        <br><hr><br>
+        
+
+        <div class="card">
+            <div class="card-body">
+
+                <h2>Criar novo jogo</h2>
+                <br>
+        
+                <input type="text" name="title" id="title" class="form-control" placeholder="Titulo" required><br>
+                <input type="number" name="year" id="year" class="form-control" placeholder="Ano" required><br>
+                <input type="number" name="price" id="price" class="form-control" placeholder="Preco" required><br>
+                <button class="btn btn-outline-success" id="confirmar">Confirmar</button>
+
+            </div>
+        </div><br>
+
+
+    </div>
+    
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    var games = document.getElementById('games')
+    var confirmar = document.getElementById('confirmar')
+    var cadastrar = document.getElementById('cadastrar')
+    var axiosConfig = {
+        headers:{
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+    }
+
+
+    cadastrar.addEventListener('click', function(){
+        var email = document.getElementById('email').value
+        var password = document.getElementById('password').value
+
+        var data = {
+            email,
+            password
+        }
+
+        axios.post("http://localhost/auth",data).then((data)=>{
+            const token = data.data.token
+
+            localStorage.setItem("token",token)
+            axiosConfig.headers.Authorization = `Bearer ${localStorage.getItem('token')}`
+            window.location.href = "/Front%20end/index.html"
+        }).catch((err)=>{console.error(err)})
+    })
+    
+
+    axios.get("http://localhost/games",axiosConfig).then((data) => {
+        data.data.games.forEach(element => {
+            games.innerHTML += `<p class="form-control">• ${element.title} - ${element.year} - $${element.price}<button class="editar" style="float: right;" id="edit${element.id}" value="${element.id},${element.title},${element.year},${element.price}" onclick="editarId(this.value)">Editar</button> <button class="apagar" style="float: right;" id="${element.id}" value="${element.id}" onclick="apagar(this.value)">Apagar</button></p>`
+        })
+    }).catch((err) => {console.error(err)})
+
+
+
+
+    confirmar.addEventListener('click', function(){
+        var title = document.getElementById('title').value
+        var year = document.getElementById('year').value
+        var price = document.getElementById('price').value
+
+        let data = { title,year,price }
+
+        axios.post("http://localhost/game",axiosConfig,data).then(() => {
+            window.location.href = "/Front%20end/index.html"
+        }).catch(err => console.error(err))
+    })
+
+
+    function apagar(id) {
+        axios.delete(`http://localhost/game/${id}`,axiosConfig).then(() => {
+            window.location.href = "/Front%20end/index.html"
+        }).catch(err => console.error(err))
+    }
+
+
+    function editarId(data) {
+        var idEdit = document.getElementById('idEdit')
+        var title = document.getElementById('titleEdit')
+        var year = document.getElementById('yearEdit')
+        var price = document.getElementById('priceEdit')
+
+        data = String(data).split(",")
+        let id = data[0]
+
+        dataObj = {
+            title: data[1],
+            year: data[2],
+            price: data[3],
+        }
+        
+        idEdit.value = id
+        title.value = dataObj["title"]
+        year.value = dataObj["year"]
+        price.value = dataObj["price"]
+    }
+    
+
+    function editar() {
+        var id = document.getElementById('idEdit').value
+        var title = document.getElementById('titleEdit').value
+        var year = document.getElementById('yearEdit').value
+        var price = document.getElementById('priceEdit').value
+
+        var data = {
+            title,
+            year,
+            price
+        }
+
+        axios.put(`http://localhost/game/${id}`,axiosConfig,data).then(()=>{window.location.href = "/Front%20end/index.html"}).catch((err) => {console.error(err)})
+    }
+    
+
+</script>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</html>
