@@ -47,7 +47,19 @@ async function auth(req,res,next) {
 app.post('/auth', async (req,res) => { // Gera o token
     try{
 
-        const {email,password} = req.body
+        const {email,password} = req.body,
+            HATEOS = [
+                {
+                    "Href": "http://localhost/games",
+                    "Method": "GET",
+                    "Rel":"get_games"
+                },
+                {
+                    "Href": "http://localhost/game",
+                    "Method": "POST",
+                    "Rel":"post_games"
+                }
+            ]
 
         if(email == undefined || password == undefined || email == null || password == null){return res.sendStatus(400)}
 
@@ -68,10 +80,12 @@ app.post('/auth', async (req,res) => { // Gera o token
         // informacao dentro do token: "Payload"
 
         res.status(200)
-        res.json({
+        res.json({user: {
             "name": emailFound.name,
             "email": emailFound.email,
-            "token": token
+            "token": token,
+        },
+        _links: HATEOS
         })
 
 
@@ -83,15 +97,39 @@ app.post('/auth', async (req,res) => { // Gera o token
 
 app.get('/games', auth, async (req,res) => {
     try{
+        const HATEOS = [
+            {
+                "Href": "http://localhost/game",
+                "Method": "POST",
+                "Rel":"post_games"
+            },
+            {
+                "Href": "http://localhost/auth",
+                "Method": "POST",
+                "Rel":"post_auth"
+            }
+        ]
         const games = await gamesModel.findAll()
-        res.json({ games })
+        res.json({ games, _links: HATEOS })
     } catch(err){console.error(err)}
 })
 
 app.get('/game/:id', auth, async (req,res) => {
     try{
 
-        const {id} = req.params
+        const {id} = req.params,
+            HATEOS = [
+                {
+                    "Href": `http://localhost/game/${id}`,
+                    "Method": "DELETE",
+                    "Rel":"delete_game"
+                },
+                {
+                    "Href": `http://localhost/game/${id}`,
+                    "Method": "PUT",
+                    "Rel":"put_game"
+                }
+            ]         
 
         if(isNaN(id)){return res.sendStatus(400)}
     
@@ -99,14 +137,26 @@ app.get('/game/:id', auth, async (req,res) => {
     
         if(search == undefined){return res.sendStatus(404)}
     
-        res.status(200).json({ search })
+        res.status(200).json({ search, _links: HATEOS })
 
     } catch(err){console.error(err)}
 })
 
 app.delete('/game/:id', auth, async (req,res) => {
     try{
-        const {id} = req.params
+        const {id} = req.params,
+            HATEOS = [
+                {
+                    "Href": `http://localhost/game/${id}`,
+                    "Method": "GET",
+                    "Rel":"get_game"
+                },
+                {
+                    "Href": `http://localhost/game/${id}`,
+                    "Method": "PUT",
+                    "Rel":"put_game"
+                }
+            ]
 
         if(isNaN(id)){return res.sendStatus(400)}
     
@@ -116,21 +166,33 @@ app.delete('/game/:id', auth, async (req,res) => {
         await gamesModel.destroy({ where:{ id } })
         const games = await gamesModel.findAll()
     
-        res.json({ games })
+        res.json({ games, _links: HATEOS })
     } catch(err){console.error(err)}
 })
 
 app.post('/game', auth, async (req,res) => {
     try{
 
-        const {title,year,price} = req.body
+        const {title,year,price} = req.body,
+            HATEOS = [
+                {
+                    "Href": "http://localhost/games",
+                    "Method": "GET",
+                    "Rel":"get_games"
+                },
+                {
+                    "Href": "http://localhost/game",
+                    "Method": "POST",
+                    "Rel":"post_auth"
+                }
+            ]
 
         if(isNaN(year) || isNaN(price)){return res.sendStatus(400)}
 
         await gamesModel.create({ title,year,price })
 
         const game = await gamesModel.findOne({ where:{ title } })
-        res.json({ game })
+        res.json({ game, _links: HATEOS })
 
     } catch(err){console.error(err)}
 })
@@ -140,6 +202,19 @@ app.put('/game/:id', auth, async (req,res) => {
 
         const { id } = req.params;
         const { title,year,price } = req.body;
+
+        const HATEOS = [
+            {
+                "Href": `http://localhost/game/${id}`,
+                "Method": "DELETE",
+                "Rel":"delete_game"
+            },
+            {
+                "Href": `http://localhost/game/${id}`,
+                "Method": "GET",
+                "Rel":"get_game"
+            }
+        ]
 
         if(isNaN(id)){return res.sendStatus(400)}
 
@@ -163,7 +238,7 @@ app.put('/game/:id', auth, async (req,res) => {
 
         const game = await gamesModel.findOne({ where:{ id } })
 
-        res.json({ game })
+        res.json({ game, _links: HATEOS })
 
     } catch(err){console.error(err)}
 })
