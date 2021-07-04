@@ -30,11 +30,11 @@ async function auth(req,res,next) {
             return
         }
     
-        const token = String(tokenBearer).split(" ")[1]
-        const resToken = await jwt.verify(token,security.jwt)
-        const {id,email,iat,exp} = resToken
+        const token = String(tokenBearer).split(" ")[1] // pegando o token do lado do bearer
+        const resToken = await jwt.verify(token,security.jwt) // isto retorna uma objeto com o payload do 
+        const { id,email,iat,exp } = resToken
 
-        req.user = {id,email,iat,exp}
+        req.user = {id,email,iat,exp} // Cria uma variavel acessivel de qualquer rota que estaja recebendo esse middleware
 
         next()
     } catch(err){
@@ -61,9 +61,9 @@ app.post('/auth', async (req,res) => { // Gera o token
                 }
             ]
 
-        if(email == undefined || password == undefined || email == null || password == null){return res.sendStatus(400)}
+        if(email == undefined || password == undefined || email == null || password == null){ return res.sendStatus(400) }
 
-        const emailFound = await usersModel.findOne({ where: { email } }) //aqui
+        const emailFound = await usersModel.findOne({ where: { email } })
 
         if(emailFound == undefined || emailFound == null){
             res.status(404)
