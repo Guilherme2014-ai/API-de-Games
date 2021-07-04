@@ -24,7 +24,7 @@ async function auth(req,res,next) {
     try{
         const tokenBearer = req.headers["authorization"];
 
-        if(tokenBearer == null || tokenBearer == undefined){ //estudar 
+        if(tokenBearer == null || tokenBearer == undefined){
             res.status(401)
             res.json({ "msg":"The token is undefined or Null" })
             return
